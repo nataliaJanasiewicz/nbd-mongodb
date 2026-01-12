@@ -5,6 +5,7 @@ import { getTasks, createTask, updateTask, deleteTask, type Task } from "./api/t
 type ExtraPair = { key: string; value: string };
 type TaskFormState = {
   title: string;
+  description: string;
   category: string;
   priority: number;
   extras: ExtraPair[];
@@ -47,6 +48,7 @@ const pairsToRecord = (pairs: ExtraPair[]) => {
 
 const newTaskForm = ref<TaskFormState>({
   title: "",
+  description: "",
   category: "ogólne",
   priority: 3,
   extras: [createEmptyExtra()]
@@ -97,6 +99,7 @@ async function addTask() {
 
   await createTask({
     title: newTaskForm.value.title,
+    description: newTaskForm.value.description || undefined,
     category: newTaskForm.value.category,
     priority: newTaskForm.value.priority,
     extra: pairsToRecord(newTaskForm.value.extras)
@@ -104,6 +107,7 @@ async function addTask() {
 
   newTaskForm.value = {
     title: "",
+    description: "",
     category: previousCategory,
     priority: 3,
     extras: [createEmptyExtra()]
@@ -120,6 +124,7 @@ function startEditing(task: Task) {
   editingTask.value = task;
   editForm.value = {
     title: task.title,
+    description: task.description ?? "",
     category: task.category,
     priority: task.priority,
     extras: recordToPairs(task.extra)
@@ -136,6 +141,7 @@ async function saveTaskEdits() {
 
   await updateTask(editingTask.value._id, {
     title: editForm.value.title,
+    description: editForm.value.description || undefined,
     category: editForm.value.category,
     priority: editForm.value.priority,
     extra: pairsToRecord(editForm.value.extras)
@@ -223,6 +229,11 @@ onMounted(loadTasks);
           <input v-model="newTaskForm.title" placeholder="n.p. Zrob zakupy" />
         </label>
 
+        <label class="full-row">
+          <span>Description</span>
+          <textarea v-model="newTaskForm.description" rows="3" placeholder="dodaj opis..."></textarea>
+        </label>
+
         <label>
           <span>Category</span>
           <select v-model="newTaskForm.category">
@@ -284,6 +295,7 @@ onMounted(loadTasks);
             {{ task.category }}
             <span>• {{ formatDate(task.createdAt) }}</span>
           </p>
+          <p v-if="task.description" class="description">{{ task.description }}</p>
 
           <ul v-if="hasExtra(task)" class="extra">
             <li v-for="(value, key) in task.extra" :key="key">
@@ -319,6 +331,11 @@ onMounted(loadTasks);
         <label>
           <span>Title</span>
           <input v-model="editForm!.title" />
+        </label>
+
+        <label class="full-row">
+          <span>Description</span>
+          <textarea v-model="editForm!.description" rows="3"></textarea>
         </label>
 
         <label>
@@ -432,6 +449,10 @@ label {
   font-size: 0.85rem;
   gap: 6px;
   color: #475467;
+}
+
+.full-row {
+  grid-column: 1 / -1;
 }
 
 input,
@@ -588,6 +609,15 @@ button.primary:hover {
   margin: 0;
   color: #6b7280;
   font-size: 0.85rem;
+}
+
+.description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #334155;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 8px 12px;
 }
 
 .extra {
