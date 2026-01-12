@@ -1,0 +1,37 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: nbd_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: todolist
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    container_name: nbd_backend
+    restart: unless-stopped
+    environment:
+      MONGO_URL: mongodb://mongo:27017/todolist
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    container_name: nbd_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
