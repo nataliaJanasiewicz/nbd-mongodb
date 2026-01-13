@@ -35,8 +35,6 @@ export async function listTasks(query: ListQuery) {
     priorityMin,
     priorityMax,
     sort = "-createdAt",
-    page = "1",
-    limit = "20"
   } = query;
 
   const filter: any = {};
@@ -49,18 +47,15 @@ export async function listTasks(query: ListQuery) {
     if (priorityMax) filter.priority.$lte = Number(priorityMax);
   }
 
-  const pageNum = Math.max(1, Number(page));
-  const limitNum = Math.min(100, Math.max(1, Number(limit)));
-
   const findQuery = q
     ? Task.find({ ...filter, $text: { $search: q } }, { score: { $meta: "textScore" } })
         .sort({ score: { $meta: "textScore" } })
     : Task.find(filter).sort(sort);
 
-  const items = await findQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
+  const items = await findQuery;
   const total = await Task.countDocuments(q ? { ...filter, $text: { $search: q } } : filter);
 
-  return { items, total, page: pageNum, limit: limitNum };
+  return { items, total};
 }
 
 export async function statsByStatus() {
